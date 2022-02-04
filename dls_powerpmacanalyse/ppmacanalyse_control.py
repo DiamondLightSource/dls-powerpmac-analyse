@@ -96,7 +96,7 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
             backup_option = "active"
 
         cmd0 = [
-            "dls-ppmac-analyse.py",
+            "dls-powerpmac-analyse.py",
             "--interface",
             str(server_name) + ":" + str(server_port),
             "--backup",
@@ -121,7 +121,7 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
             compare_option = "active"
 
         cmd0 = [
-            "dls-ppmac-analyse.py",
+            "dls-powerpmac-analyse.py",
             "--compare",
             compare_option,
             source1,
@@ -143,7 +143,7 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
         backup_dir += "/project/active"
 
         cmd0 = [
-            "dls-ppmac-analyse.py",
+            "dls-powerpmac-analyse.py",
             "--interface",
             str(server_name) + ":" + str(server_port),
             "--download",
@@ -164,7 +164,7 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
         backup_dir += "/project/saved"
 
         cmd0 = [
-            "dls-ppmac-analyse.py",
+            "dls-powerpmac-analyse.py",
             "--interface",
             str(server_name) + ":" + str(server_port),
             "--recover",
@@ -224,13 +224,15 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
                 if is_clickedOK:
                     new_cmds = ["--username", str(self.login.username), 
                         "--password", str(self.login.password)]
-                    cmdRerun = cmd0
+                    cmdRerun = cmd0.copy()
                     for new_cmd in new_cmds:
                         cmdRerun.append(new_cmd)
                 else:
                     finished = True
             else:
                 finished = True
+            
+            count += 1
 
         # stdout, stderr = process.communicate()
         if self.wasCancelled(guiTab):
