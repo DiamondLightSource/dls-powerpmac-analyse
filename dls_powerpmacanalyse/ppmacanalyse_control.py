@@ -2,14 +2,13 @@ import signal
 import subprocess
 import sys
 import time
-from optparse import OptionParser
 
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import QColor, QTextCursor
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow
 
-from dls_powerpmacanalyse.ui_formAnalyseControl import Ui_ControlForm
 from dls_powerpmacanalyse.login import Loginform
+from dls_powerpmacanalyse.ui_formAnalyseControl import Ui_ControlForm
 
 
 class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
@@ -25,14 +24,14 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
         # 0 = backup
         # 1 = compare
         # 2 = download/recover
-        self.mode = 0 
+        self.mode = 0
 
         # Text colors
         self.blackColor = QColor(0, 0, 0)
         self.blueColor = QColor(0, 0, 255)
         self.redColor = QColor(255, 0, 0)
 
-        # IP/Port 
+        # IP/Port
         # 0 = backup
         # 2 = download/recover
         server = "192.168.56.10"
@@ -53,13 +52,13 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
         self.lineSource1.setText(source1)
         self.lineSource2.setText(source2)
 
-        # Ignore file location 
+        # Ignore file location
         # 0 = backup
         # 1 = compare
         ignoreFile = "/dls_sw/work/motion/PPMAC_TEST/ignore"
         self.lineIgnoreFile0.setText(ignoreFile)
         self.lineIgnoreFile1.setText(ignoreFile)
-        
+
         # Results file location
         # 0 = backup
         # 1 = compare
@@ -192,7 +191,9 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
             self.addTextLog("Running cmd: '" + str(" ".join(cmd)) + "'")
             start = time.time()
 
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            process = subprocess.Popen(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
             self.addTextProgress("Working .")
 
             logInterval = time.time()
@@ -222,8 +223,12 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
                 self.addTextError("\nBackup failed with errors: \n" + stderrStr)
                 is_clickedOK = self.login.exec()
                 if is_clickedOK:
-                    new_cmds = ["--username", str(self.login.username), 
-                        "--password", str(self.login.password)]
+                    new_cmds = [
+                        "--username",
+                        str(self.login.username),
+                        "--password",
+                        str(self.login.password),
+                    ]
                     cmdRerun = cmd0.copy()
                     for new_cmd in new_cmds:
                         cmdRerun.append(new_cmd)
@@ -231,7 +236,7 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
                     finished = True
             else:
                 finished = True
-            
+
             count += 1
 
         # stdout, stderr = process.communicate()
@@ -242,8 +247,12 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
             self.addTextError("\n" + optionStr + " failed with errors: \n" + stderrStr)
         else:
             self.addTextLog(
-                "\n" + optionStr + " completed in: " + str(time.time() - start) + " secs"
-            )      
+                "\n"
+                + optionStr
+                + " completed in: "
+                + str(time.time() - start)
+                + " secs"
+            )
 
     def enableCancelButton(self, guiTab, value):
         if guiTab == 0:
@@ -251,8 +260,8 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
         elif guiTab == 1:
             self.pushCancel1.setEnabled(value)
         elif guiTab == 2:
-            self.pushCancel2.setEnabled(value)       
-    
+            self.pushCancel2.setEnabled(value)
+
     def wasCancelled(self, guiTab):
         if guiTab == 0:
             return self.cancelBackup
@@ -267,7 +276,7 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
         elif guiTab == 1:
             self.cancelCompare = value
         elif guiTab == 2:
-            self.cancelDR = value       
+            self.cancelDR = value
 
     def cancelBackup(self):
         self.cancelBackup = True
@@ -294,7 +303,7 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
             elif self.mode == 1:
                 self.lineOutputDir1.setText(directory)
             elif self.mode == 2:
-                self.lineOutputDir2.setText(directory)    
+                self.lineOutputDir2.setText(directory)
 
     def backupDirBrowser(self):
         directory = QFileDialog.getExistingDirectory()
@@ -333,10 +342,6 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
 
 
 def main():
-    usage = """usage: %prog [options] %prog is a graphical frontend to the
-    Deltatau motorcontroller known as PMAC."""
-    parser = OptionParser(usage)
-
     app = QApplication(sys.argv)
     app.lastWindowClosed.connect(app.quit)
     win = Controlform()
