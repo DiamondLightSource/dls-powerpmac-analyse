@@ -1,10 +1,10 @@
 test_python
 ===========================
 
-dls_pmacanalyse
+dls_powerpmacanalyse
 
-A library and CLI for verifying that a delta tau motor controller
-configuration matches its motion area definition.
+A library and CLI for analysing/comparing/downloading Power PMAC
+configurations.
 
 Contributing
 ------------

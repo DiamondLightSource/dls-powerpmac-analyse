@@ -2705,7 +2705,7 @@ def main():
         return
     ppmacArgs = parseArgs()
     if ppmacArgs.gui:
-        dls_pmacanalyse.ppmacanalyse_control.main()
+        dls_powerpmacanalyse.ppmacanalyse_control.main()
     else:
         PPMACanalyse(ppmacArgs)
 
