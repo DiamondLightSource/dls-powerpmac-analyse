@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1038</width>
-    <height>600</height>
+    <height>598</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>260</y>
+      <y>270</y>
       <width>991</width>
       <height>281</height>
      </rect>
@@ -36,7 +36,7 @@
       <x>20</x>
       <y>20</y>
       <width>991</width>
-      <height>221</height>
+      <height>241</height>
      </rect>
     </property>
     <property name="currentIndex">
@@ -51,8 +51,8 @@
        <rect>
         <x>10</x>
         <y>10</y>
-        <width>951</width>
-        <height>171</height>
+        <width>971</width>
+        <height>191</height>
        </rect>
       </property>
       <property name="title">
@@ -64,7 +64,7 @@
          <x>10</x>
          <y>30</y>
          <width>241</width>
-         <height>131</height>
+         <height>151</height>
         </rect>
        </property>
        <property name="title">
@@ -147,7 +147,7 @@
          <x>260</x>
          <y>30</y>
          <width>541</width>
-         <height>131</height>
+         <height>151</height>
         </rect>
        </property>
        <property name="title">
@@ -255,8 +255,8 @@
         <rect>
          <x>810</x>
          <y>30</y>
-         <width>111</width>
-         <height>131</height>
+         <width>141</width>
+         <height>151</height>
         </rect>
        </property>
        <property name="title">
@@ -307,7 +307,7 @@
         <x>10</x>
         <y>10</y>
         <width>971</width>
-        <height>171</height>
+        <height>191</height>
        </rect>
       </property>
       <property name="title">
@@ -319,7 +319,7 @@
          <x>10</x>
          <y>30</y>
          <width>351</width>
-         <height>131</height>
+         <height>151</height>
         </rect>
        </property>
        <property name="title">
@@ -416,7 +416,7 @@
          <x>370</x>
          <y>30</y>
          <width>471</width>
-         <height>131</height>
+         <height>151</height>
         </rect>
        </property>
        <property name="title">
@@ -476,7 +476,7 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="">
+       <widget class="QWidget" name="layoutWidget">
         <property name="geometry">
          <rect>
           <x>8</x>
@@ -518,6 +518,22 @@
          </item>
         </layout>
        </widget>
+       <widget class="QPushButton" name="pushOpenViewer">
+        <property name="geometry">
+         <rect>
+          <x>260</x>
+          <y>110</y>
+          <width>201</width>
+          <height>30</height>
+         </rect>
+        </property>
+        <property name="toolTip">
+         <string>After running a compare, open a window to display differences between Source1 and Source2</string>
+        </property>
+        <property name="text">
+         <string>Open Comparison Viewer</string>
+        </property>
+       </widget>
       </widget>
       <widget class="QGroupBox" name="groupBox_8">
        <property name="geometry">
@@ -525,7 +541,7 @@
          <x>851</x>
          <y>30</y>
          <width>111</width>
-         <height>131</height>
+         <height>141</height>
         </rect>
        </property>
        <property name="title">
@@ -576,7 +592,7 @@
         <x>10</x>
         <y>10</y>
         <width>971</width>
-        <height>161</height>
+        <height>191</height>
        </rect>
       </property>
       <property name="title">
@@ -588,7 +604,7 @@
          <x>10</x>
          <y>30</y>
          <width>241</width>
-         <height>121</height>
+         <height>141</height>
         </rect>
        </property>
        <property name="title">
@@ -671,7 +687,7 @@
          <x>260</x>
          <y>30</y>
          <width>481</width>
-         <height>121</height>
+         <height>141</height>
         </rect>
        </property>
        <property name="title">
@@ -738,7 +754,7 @@
          <x>750</x>
          <y>30</y>
          <width>211</width>
-         <height>121</height>
+         <height>141</height>
         </rect>
        </property>
        <property name="title">
@@ -824,7 +840,7 @@
    <slot>ignoreFileBrowser()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>833</x>
+     <x>823</x>
      <y>167</y>
     </hint>
     <hint type="destinationlabel">
@@ -936,7 +952,7 @@
    <slot>cancelCompare()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>884</x>
+     <x>895</x>
      <y>206</y>
     </hint>
     <hint type="destinationlabel">
@@ -1057,6 +1073,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>pushOpenViewer</sender>
+   <signal>clicked()</signal>
+   <receiver>ControlForm</receiver>
+   <slot>openViewer()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>782</x>
+     <y>79</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>886</x>
+     <y>563</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>runBackup()</slot>
@@ -1072,5 +1104,6 @@
   <slot>cancelDR()</slot>
   <slot>outputDirBrowser()</slot>
   <slot>backupDirBrowser()</slot>
+  <slot>openViewer()</slot>
  </slots>
 </ui>

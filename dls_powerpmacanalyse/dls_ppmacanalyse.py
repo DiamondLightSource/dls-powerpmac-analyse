@@ -6,6 +6,7 @@ import re
 import sys
 import time
 
+from difflib import HtmlDiff
 import numpy as np
 from dls_pmaclib import dls_pmacremote
 from scp import SCPClient
@@ -910,33 +911,75 @@ class ProjectCompare(object):
                 "A": self.projectA.files[fileName],
                 "B": self.projectB.files[fileName],
             }
-        missingFile = f"{diffDirPath}/missingFiles.txt"
-        with open(missingFile, "w+") as writeFile:
-            writeFile.write(
-                f"@@ Project files in source '{self.projectA.source}' but not source "
-                f"'{self.projectB.source}' @@\n"
-            )
-            for projFileName in fileNamesOnlyInA:
-                writeFile.write(f">>>> {projFileName}\n")
-            writeFile.write(
-                f"@@ Project files in source '{self.projectB.source}' but not source "
-                f"'{self.projectA.source}' @@\n"
-            )
-            for projFileName in fileNamesOnlyInB:
-                writeFile.write(f">>>> {projFileName}\n")
-        for projFileName in fileNamesInAandB:
-            projFileName_ = projFileName.split("/")[-1]
-            diffFilePath = f"{diffDirPath}/{projFileName_}.diff"
-            with open(diffFilePath, "w+") as diffFile:
-                diffFile.writelines(
-                    difflib.unified_diff(
-                        self.projectA.files[projFileName].contents,
-                        self.projectB.files[projFileName].contents,
-                        fromfile=f"{self.projectA.source}: {projFileName}",
-                        tofile=f"{self.projectB.source}: {projFileName}",
-                        lineterm="\n",
-                    )
+        if len(self.filesOnlyInA) or len (self.filesOnlyInB):
+            os.makedirs(diffDirPath, exist_ok=True)
+            t1 = []
+            t2 = []
+            for name in fileNamesA:  
+                t1.append(name)
+            for name in fileNamesB:     
+                t2.append(name)
+            t1.sort()
+            t2.sort()
+
+            d = HtmlDiff()
+            difference = d.make_file(t1,t2, fromdesc="Programs in Source A", 
+                todesc="Programs in Source B", context=False)
+            diffFile = f"{diffDirPath}/MissingFiles.html"
+            with open(diffFile, "w") as f:
+                for line in difference.splitlines():
+                    print(line, file=f)
+
+            missingFile = f"{diffDirPath}/missingFiles.txt"
+            with open(missingFile, "w+") as writeFile:
+                writeFile.write(
+                    f"@@ Project files in source '{self.projectA.source}' but not source "
+                    f"'{self.projectB.source}' @@\n"
                 )
+                for projFileName in fileNamesOnlyInA:
+                    writeFile.write(f">>>> {projFileName}\n")
+                writeFile.write(
+                    f"@@ Project files in source '{self.projectB.source}' but not source "
+                    f"'{self.projectA.source}' @@\n"
+                )
+                for projFileName in fileNamesOnlyInB:
+                    writeFile.write(f">>>> {projFileName}\n")
+        for projFileName in fileNamesInAandB:
+            t1 = []
+            t2 = []
+            for elem in self.projectA.files[projFileName].contents:  
+                t1.append(str(elem))
+            for elem in self.projectB.files[projFileName].contents:     
+                t2.append(str(elem))
+            t1.sort()
+            t2.sort()
+
+            doesDiffExist = False
+            if self.projectA.files[projFileName].contents != self.projectB.files[projFileName].contents:
+                doesDiffExist = True
+            if doesDiffExist:
+                os.makedirs(diffDirPath, exist_ok=True)
+                projFileName_ = projFileName.split("/")[-1]
+                diffFilePath = f"{diffDirPath}/{projFileName_}.diff"
+
+                d = HtmlDiff()
+                difference = d.make_file(t1,t2, fromdesc="Source A", todesc="Source B", context=False)
+                diffFile = f"{diffDirPath}/{projFileName_}_diff.html"
+                with open(diffFile, "w") as f:
+                    for line in difference.splitlines():
+                        print(line, file=f)
+
+                
+                with open(diffFilePath, "w+") as diffFile:
+                    diffFile.writelines(
+                        difflib.unified_diff(
+                            self.projectA.files[projFileName].contents,
+                            self.projectB.files[projFileName].contents,
+                            fromfile=f"{self.projectA.source}: {projFileName}",
+                            tofile=f"{self.projectB.source}: {projFileName}",
+                            lineterm="\n",
+                        )
+                    )
 
 
 class PPMACCompare(object):
@@ -988,16 +1031,17 @@ class PPMACCompare(object):
             elemName: self.ppmacInstanceB.activeElements[elemName]
             for elemName in self.elemNamesOnlyInB
         }
+        
         for elemName in self.elemNamesInAandB:
             self.activeElemsInAandB[elemName] = {
                 "A": self.ppmacInstanceA.activeElements[elemName],
                 "B": self.ppmacInstanceB.activeElements[elemName],
-            }
+        }
+
         self.writeActiveElemDifferencesToFile()
 
     def comparePrograms(self):
         outputDir = f"{self.compareDir}/active/programs"
-        os.makedirs(outputDir, exist_ok=True)
         programsA = mergeDicts(
             self.ppmacInstanceA.motionPrograms,
             self.ppmacInstanceA.subPrograms,
@@ -1017,37 +1061,77 @@ class PPMACCompare(object):
         self.progNamesOnlyInA = progNamesA - progNamesB
         self.progNamesOnlyInB = progNamesB - progNamesA
         self.progNamesInAandB = progNamesA & progNamesB
-        with open(f"{outputDir}/missingPrograms.txt", "w+") as writeFile:
-            writeFile.write(
-                f"@@ Programs in source '{self.ppmacInstanceA.source}' but not source "
-                f"'{self.ppmacInstanceB.source}'\n"
-            )
-            for progName in self.progNamesOnlyInA:
-                writeFile.write(f">>>> {progName}\n")
-                writeFile.write(f"{programsA[progName].printInfo()}\n")
-            writeFile.write(
-                f"@@ Programs in source '{self.ppmacInstanceB.source}' but not source "
-                f"'{self.ppmacInstanceA.source}'\n"
-            )
-            for progName in self.progNamesOnlyInB:
-                writeFile.write(f">>>> {progName}\n")
-                writeFile.write(f"{programsB[progName].printInfo()}\n")
+        if len(self.progNamesOnlyInA) or len(self.progNamesOnlyInB):
+            os.makedirs(outputDir, exist_ok=True)
+
+            t1 = []
+            t2 = []
+            for name in progNamesA:  
+                t1.append(name)
+            for name in progNamesB:     
+                t2.append(name)
+            t1.sort()
+            t2.sort()
+
+            d = HtmlDiff()
+            difference = d.make_file(t1,t2, fromdesc="Programs in Source A", 
+                todesc="Programs in Source B", context=False)
+            diffFile = f"{outputDir}/MissingPrograms.html"
+            with open(diffFile, "w") as f:
+                for line in difference.splitlines():
+                    print(line, file=f)
+
+            with open(f"{outputDir}/missingPrograms.txt", "w+") as writeFile:
+                writeFile.write(
+                    f"@@ Programs in source '{self.ppmacInstanceA.source}' but not source "
+                    f"'{self.ppmacInstanceB.source}'\n"
+                )
+                for progName in self.progNamesOnlyInA:
+                    writeFile.write(f">>>> {progName}\n")
+                    writeFile.write(f"{programsA[progName].printInfo()}\n")
+                writeFile.write(
+                    f"@@ Programs in source '{self.ppmacInstanceB.source}' but not source "
+                    f"'{self.ppmacInstanceA.source}'\n"
+                )
+                for progName in self.progNamesOnlyInB:
+                    writeFile.write(f">>>> {progName}\n")
+                    writeFile.write(f"{programsB[progName].printInfo()}\n")
         for progName in self.progNamesInAandB:
             filePath = f"{outputDir}/{progName}.diff"
-            with open(filePath, "w+") as writeFile:
-                writeFile.writelines(
-                    difflib.unified_diff(
+
+            t1 = []
+            t2 = []
+            for elem in programsA[progName].listing:  
+                t1.append(str(elem))
+            for elem in programsB[progName].listing:     
+                t2.append(str(elem))
+            t1.sort()
+            t2.sort()
+
+            doesDiffExist = False
+            if programsA[progName].listing != programsB[progName].listing:
+                doesDiffExist = True
+            if doesDiffExist:
+                os.makedirs(outputDir, exist_ok=True)
+                d = HtmlDiff()
+                difference = d.make_file(t1,t2, fromdesc="Source A", todesc="Source B", context=False)
+                diffFile = f"{outputDir}/{progName}_diff.html"
+                with open(diffFile, "w") as f:
+                    for line in difference.splitlines():
+                        print(line, file=f)
+                with open(filePath, "w+") as writeFile:
+                    writeFile.writelines(
+                        difflib.unified_diff(
                         programsA[progName].listing,
                         programsB[progName].listing,
                         fromfile=f"{self.ppmacInstanceA.source}: {progName}",
                         tofile=f"{self.ppmacInstanceB.source}: {progName}",
                         lineterm="\n",
+                        )
                     )
-                )
 
     def compareCoordSystemAxesDefinitions(self):
         outputDir = f"{self.compareDir}/active/axes"
-        os.makedirs(outputDir, exist_ok=True)
         coordSysDefsA = self.ppmacInstanceA.coordSystemDefs
         coordSysDefsB = self.ppmacInstanceB.coordSystemDefs
         coordSysNumbersA = set(coordSysDefsA.keys())
@@ -1055,46 +1139,102 @@ class PPMACCompare(object):
         self.coordSystemsOnlyInA = coordSysNumbersA - coordSysNumbersB
         self.coordSystemsOnlyInB = coordSysNumbersB - coordSysNumbersA
         self.coordSystemsInAandB = coordSysNumbersA & coordSysNumbersB
-        with open(f"{outputDir}/missingCoordSystems.txt", "w+") as writeFile:
-            writeFile.write(
-                "@@ Coordinate Systems defined in source"
-                f" '{self.ppmacInstanceA.source}' but not source"
-                f" '{self.ppmacInstanceB.source}'\n"
-            )
-            for coordSysNumber in self.coordSystemsOnlyInA:
-                writeFile.write(f">>>> &{coordSysNumber}\n")
+
+        if len(self.coordSystemsOnlyInA) or len(self.coordSystemsOnlyInB):
+            os.makedirs(outputDir, exist_ok=True)
+
+            t1 = []
+            t2 = []
+            for elemName in coordSysNumbersA:  
+                t1.append("&" + str(elemName))
+            for elemName in coordSysNumbersB:      
+                t2.append("&" + str(elemName))
+            t1.sort()
+            t2.sort() 
+            d = HtmlDiff()
+            difference = d.make_file(t1,t2, fromdesc="Coord Systems defined in A", 
+                todesc="Coord Systems defined in B", context=False)
+            diffFile = f"{outputDir}/MissingCoordSystems.html"
+            with open(diffFile, "w") as f:
+                for line in difference.splitlines():
+                    print(line, file=f)
+
+            with open(f"{outputDir}/missingCoordSystems.txt", "w+") as writeFile:
                 writeFile.write(
-                    self.ppmacInstanceA.coordSystemDefs[coordSysNumber].printInfo()
+                    "@@ Coordinate Systems defined in source"
+                    f" '{self.ppmacInstanceA.source}' but not source"
+                    f" '{self.ppmacInstanceB.source}'\n"
                 )
-            writeFile.write(
-                "@@ Coordinate Systems defined in source"
-                f" '{self.ppmacInstanceB.source}' but not source"
-                f" '{self.ppmacInstanceA.source}'\n"
-            )
-            for coordSysNumber in self.coordSystemsOnlyInB:
-                writeFile.write(f">>>> &{coordSysNumber}\n")
+                for coordSysNumber in self.coordSystemsOnlyInA:
+                    writeFile.write(f">>>> &{coordSysNumber}\n")
+                    writeFile.write(
+                        self.ppmacInstanceA.coordSystemDefs[coordSysNumber].printInfo()
+                    )
                 writeFile.write(
-                    self.ppmacInstanceB.coordSystemDefs[coordSysNumber].printInfo()
+                    "@@ Coordinate Systems defined in source"
+                    f" '{self.ppmacInstanceB.source}' but not source"
+                    f" '{self.ppmacInstanceA.source}'\n"
                 )
+                for coordSysNumber in self.coordSystemsOnlyInB:
+                    writeFile.write(f">>>> &{coordSysNumber}\n")
+                    writeFile.write(
+                        self.ppmacInstanceB.coordSystemDefs[coordSysNumber].printInfo()
+                    )
         for coordSysNumber in self.coordSystemsInAandB:
             filePath = f"{outputDir}/cs{coordSysNumber}Axes.diff"
-            with open(filePath, "w+") as writeFile:
-                added, removed, modified, same = comparedicts(
+            added, removed, modified, same = comparedicts(
                     coordSysDefsA[coordSysNumber].motor,
                     coordSysDefsB[coordSysNumber].motor,
                 )
-                for motorNumber in modified:
-                    writeFile.write(
-                        "@@ Motor"
-                        f" {motorNumber} @@\n{self.ppmacInstanceA.source} definition = "
-                        f"&{coordSysNumber}#{motorNumber}->{modified[motorNumber][0]}\n"
-                        f"{self.ppmacInstanceB.source} definition = "
-                        f"&{coordSysNumber}#{motorNumber}->{modified[motorNumber][1]}\n"
-                    )
+            if len(modified) > 0:
+                os.makedirs(outputDir, exist_ok=True)
+
+                t1 = []
+                t2 = []
+                #for coordSysNumber in self.ppmacInstanceA.coordSystemDefs.keys():
+                t1.append(str(self.ppmacInstanceA.coordSystemDefs[coordSysNumber].printInfo()))
+                #for coordSysNumber in self.ppmacInstanceB.coordSystemDefs.keys():
+                t2.append(str(self.ppmacInstanceB.coordSystemDefs[coordSysNumber].printInfo()))
+                t1.sort()
+                t2.sort() 
+                d = HtmlDiff()
+                difference = d.make_file(t1,t2, fromdesc="Coord Systems defined in A", 
+                    todesc="Coord Systems defined in B", context=False)
+                diffFile = f"{outputDir}/cs{coordSysNumber}Axes_diff.html"
+                with open(diffFile, "w") as f:
+                    for line in difference.splitlines():
+                        print(line, file=f)
+
+                with open(filePath, "w+") as writeFile:
+                    for motorNumber in modified:
+                        writeFile.write(
+                            "@@ Motor"
+                            f" {motorNumber} @@\n{self.ppmacInstanceA.source} definition = "
+                            f"&{coordSysNumber}#{motorNumber}->{modified[motorNumber][0]}\n"
+                            f"{self.ppmacInstanceB.source} definition = "
+                            f"&{coordSysNumber}#{motorNumber}->{modified[motorNumber][1]}\n"
+                        )
 
     def writeActiveElemDifferencesToFile(self):
         outputDir = f"{self.compareDir}/active"
         os.makedirs(outputDir, exist_ok=True)
+        # Create diff file with all differences
+        t1 = []
+        t2 = []
+        for elemName in self.ppmacInstanceA.activeElements.keys():  
+            t1.append(str(self.ppmacInstanceA.activeElements[elemName].printInfo()))
+        for elemName in self.ppmacInstanceB.activeElements.keys():     
+            t2.append(str(self.ppmacInstanceB.activeElements[elemName].printInfo()))
+        t1.sort()
+        t2.sort()
+
+        d = HtmlDiff()
+        difference = d.make_file(t1,t2, fromdesc="Source A", todesc="Source B", context=True)
+        diffFile = f"{outputDir}/ActiveElements_diff.html"
+        with open(diffFile, "w") as f:
+            for line in difference.splitlines():
+                print(line, file=f)
+
         dataStructCategoriesInA = set(
             [
                 elem.category
@@ -1113,19 +1253,25 @@ class PPMACCompare(object):
         try:
             sourceA = self.ppmacInstanceA.source
             sourceB = self.ppmacInstanceB.source
-            for file in filePaths:
-                diffFiles[file] = open(file, "w+")
+            #for file in filePaths:
+            #    diffFiles[file] = open(file, "w+")
             # write first set of headers
-            for file in diffFiles:
-                diffFiles[file].write(
-                    f"@@ Active elements in source '{sourceA}' but not source"
-                    f" '{sourceB}' @@\n"
-                )
+            #for file in diffFiles:
+            #    diffFiles[file].write(
+            #        f"@@ Active elements in source '{sourceA}' but not source"
+            #        f" '{sourceB}' @@\n"
+            #    )
             # write to file elements that are in ppmacA but not ppmacB
             for elemName in self.elemNamesOnlyInA:
                 file = (
                     f"{self.compareDir}/active/"
                     f"{self.activeElemsOnlyInA[elemName].category}.diff"
+                )
+                if file not in diffFiles:
+                    diffFiles[file] = open(file, "w+")
+                diffFiles[file].write(
+                    f"@@ Active elements in source '{sourceA}' but not source"
+                    f" '{sourceB}' @@\n"
                 )
                 diffFiles[file].write(
                     ">>>> "
@@ -1135,16 +1281,23 @@ class PPMACCompare(object):
                     + "\n"
                 )
             # write second set of headers
-            for file in diffFiles:
-                diffFiles[file].write(
-                    f"@@ Active elements in source '{sourceB}' but not source"
-                    f" '{sourceA}' @@\n"
-                )
+            #for file in diffFiles:
+            #    diffFiles[file].write(
+            #        f"@@ Active elements in source '{sourceB}' but not source"
+            #        f" '{sourceA}' @@\n"
+            #    )
             # write to file elements that are in ppmacB but not ppmacA
             for elemName in self.elemNamesOnlyInB:
                 file = (
                     f"{self.compareDir}/active/"
                     f"{self.activeElemsOnlyInB[elemName].category}.diff"
+                )
+                if file not in diffFiles:
+                    print("open file "+file)
+                    diffFiles[file] = open(file, "w+")
+                diffFiles[file].write(
+                    f"@@ Active elements in source '{sourceB}' but not source"
+                    f" '{sourceA}' @@\n"
                 )
                 diffFiles[file].write(
                     ">>>> "
@@ -1155,11 +1308,11 @@ class PPMACCompare(object):
                 )
             # write to file elements that in ppmacB but not ppmacA but whose
             # values differ
-            for file in diffFiles:
-                diffFiles[file].write(
-                    f"@@ Active elements in source '{sourceA}' and source '{sourceB}'"
-                    " with different values @@\n"
-                )
+            #for file in diffFiles:
+            #    diffFiles[file].write(
+            #        f"@@ Active elements in source '{sourceA}' and source '{sourceB}'"
+            #        " with different values @@\n"
+            #    )
             for elemName in self.elemNamesInAandB:
                 valA = self.activeElemsInAandB[elemName]["A"].value
                 valB = self.activeElemsInAandB[elemName]["B"].value
@@ -1167,6 +1320,13 @@ class PPMACCompare(object):
                     file = (
                         f"{self.compareDir}/active/"
                         f"{self.ppmacInstanceA.activeElements[elemName].category}.diff"
+                    )
+                    if file not in diffFiles:
+                        print("open file "+file)
+                        diffFiles[file] = open(file, "w+")
+                    diffFiles[file].write(
+                        f"@@ Active elements in source '{sourceA}' and source '{sourceB}'"
+                        " with different values @@\n"
                     )
                     diffFiles[file].write(
                         f">>>> {elemName} @@\n{self.ppmacInstanceA.source} value ="
@@ -2559,13 +2719,9 @@ class PPMACanalyse:
             ppmacComparison.compareCoordSystemAxesDefinitions()
         if type == "all" or type == "project":
             savedProjComparison = ProjectCompare(projectASaved, projectBSaved)
-            savedProjDiffPath = f"{self.compareDir}/project/saved"
-            os.makedirs(savedProjDiffPath, exist_ok=True)
-            savedProjComparison.compareProjectFiles(savedProjDiffPath)
+            savedProjComparison.compareProjectFiles(f"{self.compareDir}/project/saved")
             activeProjComparison = ProjectCompare(projectAActive, projectBActive)
-            activeProjDiffPath = f"{self.compareDir}/project/active"
-            os.makedirs(activeProjDiffPath, exist_ok=True)
-            activeProjComparison.compareProjectFiles(activeProjDiffPath)
+            activeProjComparison.compareProjectFiles(f"{self.compareDir}/project/active")
 
     def processBackupOptions(self, ppmacArgs):
         self.name = "hardware"
