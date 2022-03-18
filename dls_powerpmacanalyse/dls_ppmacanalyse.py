@@ -1215,7 +1215,8 @@ class PPMACCompare(object):
 
     def writeActiveElemDifferencesToFile(self):
         outputDir = f"{self.compareDir}/active"
-        os.makedirs(outputDir, exist_ok=True)
+        dirCreated = False
+        
         # Create diff file with all differences
         compArr1 = []
         compArr2 = []
@@ -1228,10 +1229,13 @@ class PPMACCompare(object):
 
         htmlDiff = HtmlDiff()
         difference = htmlDiff.make_file(compArr1,compArr2, fromdesc="Source A", todesc="Source B", context=True)
-        diffFile = f"{outputDir}/ActiveElements_diff.html"
-        with open(diffFile, "w") as f:
-            for line in difference.splitlines():
-                print(line, file=f)
+        if compArr1 != compArr2:
+            dirCreated = True
+            os.makedirs(outputDir, exist_ok=True)
+            diffFile = f"{outputDir}/ActiveElements_diff.html"
+            with open(diffFile, "w") as f:
+                for line in difference.splitlines():
+                    print(line, file=f)
 
         dataStructCategoriesInA = set(
             [
@@ -1266,6 +1270,9 @@ class PPMACCompare(object):
                     f"{self.activeElemsOnlyInA[elemName].category}.diff"
                 )
                 if file not in diffFiles:
+                    if not dirCreated:
+                        os.makedirs(outputDir, exist_ok=True)
+                        dirCreated = True
                     diffFiles[file] = open(file, "w+")
                 diffFiles[file].write(
                     f"@@ Active elements in source '{sourceA}' but not source"
@@ -1291,7 +1298,9 @@ class PPMACCompare(object):
                     f"{self.activeElemsOnlyInB[elemName].category}.diff"
                 )
                 if file not in diffFiles:
-                    print("open file "+file)
+                    if not dirCreated:
+                        os.makedirs(outputDir, exist_ok=True)
+                        dirCreated = True
                     diffFiles[file] = open(file, "w+")
                 diffFiles[file].write(
                     f"@@ Active elements in source '{sourceB}' but not source"
@@ -1320,7 +1329,9 @@ class PPMACCompare(object):
                         f"{self.ppmacInstanceA.activeElements[elemName].category}.diff"
                     )
                     if file not in diffFiles:
-                        print("open file "+file)
+                        if not dirCreated:
+                            os.makedirs(outputDir, exist_ok=True)
+                            dirCreated = True
                         diffFiles[file] = open(file, "w+")
                     diffFiles[file].write(
                         f"@@ Active elements in source '{sourceA}' and source '{sourceB}'"
