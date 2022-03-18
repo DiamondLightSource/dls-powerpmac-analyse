@@ -913,17 +913,17 @@ class ProjectCompare(object):
             }
         if len(self.filesOnlyInA) or len (self.filesOnlyInB):
             os.makedirs(diffDirPath, exist_ok=True)
-            t1 = []
-            t2 = []
+            compArr1 = []
+            compArr2 = []
             for name in fileNamesA:  
-                t1.append(name)
+                compArr1.append(name)
             for name in fileNamesB:     
-                t2.append(name)
-            t1.sort()
-            t2.sort()
+                compArr2.append(name)
+            compArr1.sort()
+            compArr2.sort()
 
-            d = HtmlDiff()
-            difference = d.make_file(t1,t2, fromdesc="Programs in Source A", 
+            htmlDiff = HtmlDiff()
+            difference = htmlDiff.make_file(compArr1,compArr2, fromdesc="Programs in Source A", 
                 todesc="Programs in Source B", context=False)
             diffFile = f"{diffDirPath}/MissingFiles.html"
             with open(diffFile, "w") as f:
@@ -945,14 +945,14 @@ class ProjectCompare(object):
                 for projFileName in fileNamesOnlyInB:
                     writeFile.write(f">>>> {projFileName}\n")
         for projFileName in fileNamesInAandB:
-            t1 = []
-            t2 = []
+            compArr1 = []
+            compArr2 = []
             for elem in self.projectA.files[projFileName].contents:  
-                t1.append(str(elem))
+                compArr1.append(str(elem))
             for elem in self.projectB.files[projFileName].contents:     
-                t2.append(str(elem))
-            t1.sort()
-            t2.sort()
+                compArr2.append(str(elem))
+            compArr1.sort()
+            compArr2.sort()
 
             doesDiffExist = False
             if self.projectA.files[projFileName].contents != self.projectB.files[projFileName].contents:
@@ -962,8 +962,8 @@ class ProjectCompare(object):
                 projFileName_ = projFileName.split("/")[-1]
                 diffFilePath = f"{diffDirPath}/{projFileName_}.diff"
 
-                d = HtmlDiff()
-                difference = d.make_file(t1,t2, fromdesc="Source A", todesc="Source B", context=False)
+                htmlDiff = HtmlDiff()
+                difference = htmlDiff.make_file(compArr1,compArr2, fromdesc="Source A", todesc="Source B", context=False)
                 diffFile = f"{diffDirPath}/{projFileName_}_diff.html"
                 with open(diffFile, "w") as f:
                     for line in difference.splitlines():
@@ -1064,17 +1064,17 @@ class PPMACCompare(object):
         if len(self.progNamesOnlyInA) or len(self.progNamesOnlyInB):
             os.makedirs(outputDir, exist_ok=True)
 
-            t1 = []
-            t2 = []
+            compArr1 = []
+            compArr2 = []
             for name in progNamesA:  
-                t1.append(name)
+                compArr1.append(name)
             for name in progNamesB:     
-                t2.append(name)
-            t1.sort()
-            t2.sort()
+                compArr2.append(name)
+            compArr1.sort()
+            compArr2.sort()
 
-            d = HtmlDiff()
-            difference = d.make_file(t1,t2, fromdesc="Programs in Source A", 
+            htmlDiff = HtmlDiff()
+            difference = htmlDiff.make_file(compArr1,compArr2, fromdesc="Programs in Source A", 
                 todesc="Programs in Source B", context=False)
             diffFile = f"{outputDir}/MissingPrograms.html"
             with open(diffFile, "w") as f:
@@ -1099,22 +1099,22 @@ class PPMACCompare(object):
         for progName in self.progNamesInAandB:
             filePath = f"{outputDir}/{progName}.diff"
 
-            t1 = []
-            t2 = []
+            compArr1 = []
+            compArr2 = []
             for elem in programsA[progName].listing:  
-                t1.append(str(elem))
+                compArr1.append(str(elem))
             for elem in programsB[progName].listing:     
-                t2.append(str(elem))
-            t1.sort()
-            t2.sort()
+                compArr2.append(str(elem))
+            compArr1.sort()
+            compArr2.sort()
 
             doesDiffExist = False
             if programsA[progName].listing != programsB[progName].listing:
                 doesDiffExist = True
             if doesDiffExist:
                 os.makedirs(outputDir, exist_ok=True)
-                d = HtmlDiff()
-                difference = d.make_file(t1,t2, fromdesc="Source A", todesc="Source B", context=False)
+                htmlDiff = HtmlDiff()
+                difference = htmlDiff.make_file(compArr1,compArr2, fromdesc="Source A", todesc="Source B", context=False)
                 diffFile = f"{outputDir}/{progName}_diff.html"
                 with open(diffFile, "w") as f:
                     for line in difference.splitlines():
@@ -1143,16 +1143,16 @@ class PPMACCompare(object):
         if len(self.coordSystemsOnlyInA) or len(self.coordSystemsOnlyInB):
             os.makedirs(outputDir, exist_ok=True)
 
-            t1 = []
-            t2 = []
+            compArr1 = []
+            compArr2 = []
             for elemName in coordSysNumbersA:  
-                t1.append("&" + str(elemName))
+                compArr1.append("&" + str(elemName))
             for elemName in coordSysNumbersB:      
-                t2.append("&" + str(elemName))
-            t1.sort()
-            t2.sort() 
-            d = HtmlDiff()
-            difference = d.make_file(t1,t2, fromdesc="Coord Systems defined in A", 
+                compArr2.append("&" + str(elemName))
+            compArr1.sort()
+            compArr2.sort() 
+            htmlDiff = HtmlDiff()
+            difference = htmlDiff.make_file(compArr1,compArr2, fromdesc="Coord Systems defined in A", 
                 todesc="Coord Systems defined in B", context=False)
             diffFile = f"{outputDir}/MissingCoordSystems.html"
             with open(diffFile, "w") as f:
@@ -1189,16 +1189,14 @@ class PPMACCompare(object):
             if len(modified) > 0:
                 os.makedirs(outputDir, exist_ok=True)
 
-                t1 = []
-                t2 = []
-                #for coordSysNumber in self.ppmacInstanceA.coordSystemDefs.keys():
-                t1.append(str(self.ppmacInstanceA.coordSystemDefs[coordSysNumber].printInfo()))
-                #for coordSysNumber in self.ppmacInstanceB.coordSystemDefs.keys():
-                t2.append(str(self.ppmacInstanceB.coordSystemDefs[coordSysNumber].printInfo()))
-                t1.sort()
-                t2.sort() 
-                d = HtmlDiff()
-                difference = d.make_file(t1,t2, fromdesc="Coord Systems defined in A", 
+                compArr1 = []
+                compArr2 = []
+                compArr1.append(str(self.ppmacInstanceA.coordSystemDefs[coordSysNumber].printInfo()))
+                compArr2.append(str(self.ppmacInstanceB.coordSystemDefs[coordSysNumber].printInfo()))
+                compArr1.sort()
+                compArr2.sort() 
+                htmlDiff = HtmlDiff()
+                difference = htmlDiff.make_file(compArr1,compArr2, fromdesc="Coord Systems defined in A", 
                     todesc="Coord Systems defined in B", context=False)
                 diffFile = f"{outputDir}/cs{coordSysNumber}Axes_diff.html"
                 with open(diffFile, "w") as f:
@@ -1219,17 +1217,17 @@ class PPMACCompare(object):
         outputDir = f"{self.compareDir}/active"
         os.makedirs(outputDir, exist_ok=True)
         # Create diff file with all differences
-        t1 = []
-        t2 = []
+        compArr1 = []
+        compArr2 = []
         for elemName in self.ppmacInstanceA.activeElements.keys():  
-            t1.append(str(self.ppmacInstanceA.activeElements[elemName].printInfo()))
+            compArr1.append(str(self.ppmacInstanceA.activeElements[elemName].printInfo()))
         for elemName in self.ppmacInstanceB.activeElements.keys():     
-            t2.append(str(self.ppmacInstanceB.activeElements[elemName].printInfo()))
-        t1.sort()
-        t2.sort()
+            compArr2.append(str(self.ppmacInstanceB.activeElements[elemName].printInfo()))
+        compArr1.sort()
+        compArr2.sort()
 
-        d = HtmlDiff()
-        difference = d.make_file(t1,t2, fromdesc="Source A", todesc="Source B", context=True)
+        htmlDiff = HtmlDiff()
+        difference = htmlDiff.make_file(compArr1,compArr2, fromdesc="Source A", todesc="Source B", context=True)
         diffFile = f"{outputDir}/ActiveElements_diff.html"
         with open(diffFile, "w") as f:
             for line in difference.splitlines():
