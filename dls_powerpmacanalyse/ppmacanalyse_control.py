@@ -2,14 +2,14 @@ import signal
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import QColor, QTextCursor
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow
-from pathlib import Path
 
-from dls_powerpmacanalyse.login import Loginform
 from dls_powerpmacanalyse.htmlDisp import ComparisonViewer
+from dls_powerpmacanalyse.login import Loginform
 from dls_powerpmacanalyse.ui_formAnalyseControl import Ui_ControlForm
 
 
@@ -346,7 +346,7 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
     def openViewer(self):
         output_dir = self.lineOutputDir1.text()
         fileList = [_.as_posix() for _ in Path(output_dir).glob("**/*html")]
-        self.compviewer.setup(output_dir,fileList)
+        self.compviewer.setup(output_dir, fileList)
         self.compviewer.show()
 
 

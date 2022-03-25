@@ -1,10 +1,18 @@
-from PyQt5 import QtCore, QtGui, QtWidgets,QtWebEngineWidgets
 import os
 
-pagemapping = {1:"Active elements"}
+from PyQt5 import QtCore, QtWebEngineWidgets, QtWidgets
 
-no_diff_html = " <!DOCTYPE html><html><body><p>No differences to display between Source A and Source B.</p></body></html> "
-no_file_html = " <!DOCTYPE html><html><body><p>Please select a diff to display from the list.</p></body></html> "
+pagemapping = {1: "Active elements"}
+
+no_diff_html = (
+    " <!DOCTYPE html><html><body><p>No differences to display between"
+    " Source A and Source B.</p></body></html> "
+)
+no_file_html = (
+    " <!DOCTYPE html><html><body><p>Please select a diff to display from"
+    " the list.</p></body></html> "
+)
+
 
 class Ui_ViewerDialog(object):
     def setupUi(self, Dialog):
@@ -29,31 +37,31 @@ class Ui_ViewerDialog(object):
         self.retranslateUi(Dialog)
         self.buttonBox.accepted.connect(Dialog.accept)
         self.buttonBox.rejected.connect(Dialog.reject)
-        self.listWidget.itemPressed['QListWidgetItem*'].connect(self.openFile)
+        self.listWidget.itemPressed["QListWidgetItem*"].connect(self.openFile)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
         if self.path is None:
             self.path = "/does/not/exist"
 
-    def setFileList(self,filelist):
+    def setFileList(self, filelist):
         self.filelist = filelist
         self.numFiles = len(filelist)
-        
+
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Comparison Viewer", "Comparison Viewer"))
         __sortingEnabled = self.listWidget.isSortingEnabled()
         self.listWidget.setSortingEnabled(False)
-        
-        for i in range(0,self.numFiles):
+
+        for i in range(0, self.numFiles):
             item = self.listWidget.item(i)
-            #listsplt = self.filelist[i].split("/")
+            # listsplt = self.filelist[i].split("/")
             name = self.filelist[i].replace(self.path, "")
             rmExtName = name.replace(".html", "")
-            item.setText(_translate("Dialog",rmExtName))
+            item.setText(_translate("Dialog", rmExtName))
         self.listWidget.setSortingEnabled(__sortingEnabled)
 
     def openFile(self):
-        for i in range(0,self.numFiles):
+        for i in range(0, self.numFiles):
             if self.listWidget.currentRow() == i:
                 self.updateWebView(self.filelist[i])
                 break
@@ -67,11 +75,12 @@ class Ui_ViewerDialog(object):
     def setPath(self, newpath):
         self.path = newpath
 
+
 class ComparisonViewer(Ui_ViewerDialog):
     def __init__(self, parent):
         self.dialog = QtWidgets.QDialog()
 
-    def setup(self,rootPath, fileList):
+    def setup(self, rootPath, fileList):
         self.ui = Ui_ViewerDialog()
         self.ui.setPath(rootPath)
         self.ui.setFileList(fileList)
@@ -79,9 +88,11 @@ class ComparisonViewer(Ui_ViewerDialog):
 
     def show(self):
         self.dialog.show()
-        
+
+
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     Dialog = QtWidgets.QDialog()
     ui = Ui_ViewerDialog()

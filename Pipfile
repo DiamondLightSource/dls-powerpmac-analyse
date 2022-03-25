@@ -16,11 +16,12 @@ types-mock = "*"
 mock = "*"
 
 [packages]
-dls-pmaclib = ">=3.0.0b2"
+dls-pmaclib = ">=3.0.0"
 numpy = "*"
 scp = "*"
 pyqt5 = "*"
 pythonqwt = "*"
+PyQtWebEngine = "==5.12"
 
 
 [scripts]
