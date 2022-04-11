@@ -209,7 +209,9 @@ class TestPpmacRepositoryWriteRead(unittest.TestCase):
 
     def test_writeDataStructures(self):
         test_file = "/tmp/active/dataStructures.txt"
+        test_dir = "/tmp/active/"
         self.obj.repositoryPath = "/tmp"
+        os.makedirs(test_dir, exist_ok=True)
         self.obj.writeDataStructures()
         f = open(test_file, "r+")
         assert (
@@ -218,15 +220,19 @@ class TestPpmacRepositoryWriteRead(unittest.TestCase):
         )
         f.close()
         os.remove(test_file)
+        os.rmdir(test_dir)
 
     def test_writeActiveElements(self):
         test_file = "/tmp/active/activeElements.txt"
+        test_dir = "/tmp/active/"
         self.obj.repositoryPath = "/tmp"
+        os.makedirs(test_dir, exist_ok=True)
         self.obj.writeActiveElements()
         f = open(test_file, "r+")
         assert f.read() == "test  testval\n"
         f.close()
         os.remove(test_file)
+        os.rmdir(test_dir)
 
     # def test_readAndStoreBufferedPrograms(self):
 
