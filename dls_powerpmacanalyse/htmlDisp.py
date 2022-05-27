@@ -2,8 +2,6 @@ import os
 
 from PyQt5 import QtCore, QtWebEngineWidgets, QtWidgets
 
-pagemapping = {1: "Active elements"}
-
 no_diff_html = (
     " <!DOCTYPE html><html><body><p>No differences to display between"
     " Source A and Source B.</p></body></html> "

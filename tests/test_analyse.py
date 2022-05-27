@@ -63,6 +63,7 @@ class DummyPpmacArgs:
         self.resultsdir = None
         self.username = "root"
         self.password = "deltatau"
+        self.name = None
 
 
 # class TestPpmacLexer(unittest.TestCase):
@@ -409,5 +410,19 @@ class TestPPMACanalyse(unittest.TestCase):
         mock_exists.assert_called_with("ignore/ignore")
 
     # def test_compare(self):
-    # def test_processBackupOptions(self):
-    # def test_backup(self):
+    @patch("dls_powerpmacanalyse.dls_ppmacanalyse.fileExists")
+    def test_processBackupOptions(self, mock_exists):
+        self.ppmacArgs.backup = ["all"]
+        mock_exists.return_value = True
+        self.obj.processBackupOptions(self.ppmacArgs)
+
+    # @patch("dls_powerpmacanalyse.dls_ppmacanalyse.PPMACanalyse.checkConnection")
+    # def test_backup(self, mock_connection):
+    #     mock_connection.return_value = True
+    #     self.obj.name = "Test"
+    #     test_file = "/tmp/test.txt"
+    #     self.obj.ignoreFile = test_file
+    #     with open(test_file, mode="w") as f:
+    #         f.write("Coord[8:]")
+    #     self.obj.backup()
+    #     os.remove(test_file)
