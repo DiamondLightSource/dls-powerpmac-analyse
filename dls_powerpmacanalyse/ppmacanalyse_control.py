@@ -4,13 +4,12 @@ import sys
 import time
 from pathlib import Path
 
-from PyQt5 import QtWidgets
-from PyQt5.QtGui import QColor, QTextCursor
-from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow
-
 from dls_powerpmacanalyse.htmlDisp import ComparisonViewer
 from dls_powerpmacanalyse.login import Loginform
 from dls_powerpmacanalyse.ui_formAnalyseControl import Ui_ControlForm
+from PyQt5 import QtWidgets
+from PyQt5.QtGui import QColor, QTextCursor
+from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow
 
 
 class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):

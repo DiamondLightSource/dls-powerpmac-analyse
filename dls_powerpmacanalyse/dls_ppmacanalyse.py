@@ -7,11 +7,10 @@ import sys
 import time
 from difflib import HtmlDiff
 
+import dls_powerpmacanalyse.ppmacanalyse_control
 import numpy as np
 from dls_pmaclib import dls_pmacremote
 from scp import SCPClient
-
-import dls_powerpmacanalyse.ppmacanalyse_control
 
 
 def timer(func):

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-from PyQt5.QtWidgets import QDialog
-
 from dls_powerpmacanalyse.ui_formLogin import Ui_Login
+from PyQt5.QtWidgets import QDialog
 
 
 class Loginform(QDialog, Ui_Login):
