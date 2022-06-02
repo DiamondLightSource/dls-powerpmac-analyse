@@ -1,0 +1,45 @@
+# Install the pipenv environment and run tests
+
+name: Pipenv install and run tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: lint
+        run: |
+          pip install --user .[dev]
+          tox -e pre-commit,mypy
+  
+  test:
+    strategy:
+      fail-fast: false
+
+    runs-on: "ubuntu-latest"
+    env:
+      # https://github.com/pytest-dev/pytest/issues/2042
+      PY_IGNORE_IMPORTMISMATCH: "1"
+      # enable QT tests with no X Display
+      QT_QPA_PLATFORM: "offscreen"
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: setup python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+
+      - name: run tests
+        run: |
+          touch requirements_dev.txt
+          pip install -e .[dev]
+          pytest tests
