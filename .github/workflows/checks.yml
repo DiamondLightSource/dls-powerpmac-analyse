@@ -67,8 +67,26 @@ jobs:
         with:
           python-version: "3.8"
 
+      - name: create requirements.txt
+        run: |
+          touch requirements.txt
+          pip install -r requirements.txt -e .
+          pip freeze --exclude-editable > requirements.txt
+
       - name: run tests
         run: |
           touch requirements_dev.txt
-          pip install -e .[dev]
+          pip install -r requirements_dev.txt -e .[dev]
           pytest tests
+
+      - name: create requirements_dev.txt
+        run: |
+          pip freeze --exclude-editable > requirements_dev.txt
+
+      - name: Upload lockfiles
+        uses: actions/upload-artifact@v2
+        with:
+          name: lockfiles
+          path: |
+            requirements.txt
+            requirements_dev.txt
