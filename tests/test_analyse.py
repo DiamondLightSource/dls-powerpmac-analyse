@@ -126,7 +126,7 @@ class TestPpmacProjectCompare(unittest.TestCase):
             pass
         self.obj.projectA = DummyProj()
         self.obj.projectB = DummyProj()
-        self.obj.compareProjectFiles("/tmp/test_diff.txt")
+        self.obj.compareProjectFiles("/tmp/")
         assert self.obj.filesOnlyInA == {}
         assert self.obj.filesOnlyInB == {}
         f = open(test_file, "r")
