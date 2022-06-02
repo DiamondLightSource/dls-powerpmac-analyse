@@ -21,10 +21,6 @@ jobs:
   test:
     strategy:
       fail-fast: false
-      matrix:
-        os: "ubuntu-latest" # can add windows-latest, macos-latest
-        python: "3.7"
-        lock: false
 
     runs-on: "ubuntu-latest"
     env:
