@@ -98,7 +98,7 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
             backup_option = "active"
 
         cmd0 = [
-            "dls-powerpmac-analyse.py",
+            "dls-powerpmac-analyse",
             "--interface",
             str(server_name) + ":" + str(server_port),
             "--backup",
@@ -123,7 +123,7 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
             compare_option = "active"
 
         cmd0 = [
-            "dls-powerpmac-analyse.py",
+            "dls-powerpmac-analyse",
             "--compare",
             compare_option,
             source1,
@@ -145,7 +145,7 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
         backup_dir += "/project/active"
 
         cmd0 = [
-            "dls-powerpmac-analyse.py",
+            "dls-powerpmac-analyse",
             "--interface",
             str(server_name) + ":" + str(server_port),
             "--download",
@@ -166,7 +166,7 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
         backup_dir += "/project/saved"
 
         cmd0 = [
-            "dls-powerpmac-analyse.py",
+            "dls-powerpmac-analyse",
             "--interface",
             str(server_name) + ":" + str(server_port),
             "--recover",
