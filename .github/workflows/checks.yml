@@ -17,3 +17,33 @@ jobs:
         run: |
           pip install --user .[dev]
           tox -e pre-commit,mypy
+  
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: "ubuntu-latest" # can add windows-latest, macos-latest
+        python: "3.7"
+        lock: false
+
+    runs-on: "ubuntu-latest"
+    env:
+      # https://github.com/pytest-dev/pytest/issues/2042
+      PY_IGNORE_IMPORTMISMATCH: "1"
+      # enable QT tests with no X Display
+      QT_QPA_PLATFORM: "offscreen"
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: setup python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+
+      - name: run tests
+        run: |
+          touch requirements_dev.txt
+          pip install -e .[dev]
+          pytest tests
