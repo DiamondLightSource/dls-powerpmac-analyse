@@ -1,11 +1,12 @@
 import sys
 import unittest
 
-from dls_powerpmacanalyse.login import Loginform
 from mock import patch
 from PyQt5.QtCore import Qt
 from PyQt5.QtTest import QTest
 from PyQt5.QtWidgets import QApplication, QWidget
+
+from dls_powerpmacanalyse.login import Loginform
 
 app = QApplication(sys.argv)
 test_widget = QWidget()

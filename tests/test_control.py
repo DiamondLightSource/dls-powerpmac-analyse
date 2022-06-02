@@ -2,9 +2,10 @@ import io
 import sys
 import unittest
 
-from dls_powerpmacanalyse.ppmacanalyse_control import Controlform
 from mock import patch
 from PyQt5.QtWidgets import QApplication, QWidget
+
+from dls_powerpmacanalyse.ppmacanalyse_control import Controlform
 
 app = QApplication(sys.argv)
 test_widget = QWidget()

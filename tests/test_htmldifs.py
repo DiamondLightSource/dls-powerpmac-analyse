@@ -1,8 +1,9 @@
 import sys
 import unittest
 
-from dls_powerpmacanalyse.htmlDisp import ComparisonViewer
 from PyQt5.QtWidgets import QApplication, QDialog
+
+from dls_powerpmacanalyse.htmlDisp import ComparisonViewer
 
 app = QApplication(sys.argv)
 test_widget = QDialog()
