@@ -1,4 +1,4 @@
-test_python
+dls-powerpmac-analyse
 ===========================
 
 dls_powerpmacanalyse
