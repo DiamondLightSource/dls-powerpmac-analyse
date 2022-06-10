@@ -10,11 +10,11 @@ Usage
 
 Help::
 
-    dls-powerpmac-analyse.py -h
+    dls-powerpmac-analyse -h
 
 Launch GUI::
 
-    dls-powerpmac-analyse.py -g
+    dls-powerpmac-analyse -g
 
 
 Command line options
@@ -151,7 +151,7 @@ The ``--download`` option copies the specified built project into the active pro
 
 Example use::
 
-$ dls_ppmacanalyse.py   --download   <backup_dir>/project/active
+$ dls_ppmacanalyse   --download   <backup_dir>/project/active
 
  where ``<backup_dir>`` is the results directory of a backup command.
 
@@ -163,7 +163,7 @@ The ``--recover`` option can be used to restore a previous saved configuration i
 
 Example use::
 
-$ dls_ppmacanalyse.py   --recover   <backup_dir>/project/saved
+$ dls_ppmacanalyse   --recover   <backup_dir>/project/saved
 
  where <backup_dir> is the results directory of a backup command.
 
@@ -174,13 +174,13 @@ The ``--compare`` option can be used to perform a comparison of both the active 
 
 Example 1, comparison of two real Power PMACs::
 
-$ dls_ppmacanalyse.py   --compare   <ip address 1>:<port 1>   <ip address 2>:<port 2>
+$ dls_ppmacanalyse   --compare   <ip address 1>:<port 1>   <ip address 2>:<port 2>
 
  where ``<ip_address_1>:<port_1>`` and ``<ip_address_2>:<port_2>`` specify the IP addresses and ports of the two real Power PMACs.
 
 Example 2, comparison of a real Power PMAC with the contents of a repository::
 
-$ dls_ppmacanalyse.py   --compare   <ip_address_1>:<port_1>   <backup_dir>
+$ dls_ppmacanalyse   --compare   <ip_address_1>:<port_1>   <backup_dir>
 
 where ``<ip address 1>:<port 1>`` specifies the IP address and port of the real Power PMAC, and ``<backup_dir>`` is the path to the top level of a backup directory, for example the ``<results_dir>`` specified when a backup command is executed.
 

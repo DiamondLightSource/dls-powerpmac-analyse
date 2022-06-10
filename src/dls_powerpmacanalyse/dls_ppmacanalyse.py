@@ -2876,7 +2876,7 @@ def main():
     """Main entry point of the script."""
     if len(sys.argv) < 2:
         print(
-            " -> Run dls-ppmac-analyse.py --help for details on how to"
+            " -> Run dls-ppmac-analyse --help for details on how to"
             + " use the Power-Pmac analyse tool"
         )
         return
