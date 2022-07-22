@@ -70,5 +70,45 @@ class ControlTest(unittest.TestCase):
         assert mock_ppmac_cmd.called
         assert "completed" in self.obj.textOutput.toPlainText()
 
+    @patch("dls_powerpmacanalyse.login.Loginform.exec")
+    @patch("dls_powerpmacanalyse.ppmacanalyse_control.subprocess.Popen")
+    def testInvalidUser(self, mock_ppmac_cmd, mock_login):
+        output = "Invalid username given"
+        mock_ppmac_cmd.return_value.stderr = io.BytesIO(output.encode())
+        mock_login.return_value = True
+        self.obj.runPPmacAnalyseCmd(["test", "cmd", "string"], 0, "Backup")
+        assert "Invalid username" in self.obj.textOutput.toPlainText()
+
+    @patch("PyQt5.QtWidgets.QFileDialog.getOpenFileName")
+    def testIgnoreFileBrowser(self, mock_dialog):
+        mock_dialog.return_value = "test/dir", "_filter"
+        self.obj.ignoreFileBrowser()
+        assert self.obj.lineIgnoreFile0.text() == "test/dir"
+        self.obj.mode = 1
+        self.obj.ignoreFileBrowser()
+        assert self.obj.lineIgnoreFile1.text() == "test/dir"
+
+    @patch("PyQt5.QtWidgets.QFileDialog.getExistingDirectory")
+    def testOutputDirBrowser(self, mock_dialog):
+        dir = "test/outputdir"
+        mock_dialog.return_value = dir
+        self.obj.outputDirBrowser()
+        assert self.obj.lineOutputDir0.text() == dir
+        self.obj.mode = 1
+        self.obj.outputDirBrowser()
+        assert self.obj.lineOutputDir1.text() == dir
+        self.obj.mode = 2
+        self.obj.outputDirBrowser()
+        assert self.obj.lineOutputDir2.text() == dir
+
+    @patch("dls_powerpmacanalyse.htmlDisp.ComparisonViewer.show")
+    def testOpenViewer(self, mock_show):
+        self.obj.openViewer()
+        assert self.obj.lineOutputDir1.text() == "./ppmacAnalyse"
+        assert self.obj.compviewer.ui.numFiles == 1
+        assert self.obj.compviewer.ui.filelist == [
+            "ppmacAnalyse/active/ActiveElements_diff.html"
+        ]
+
     def tearDown(self):
         self.obj.close()
