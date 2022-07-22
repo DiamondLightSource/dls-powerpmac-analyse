@@ -217,30 +217,11 @@ def nthRepl(s, sub, repl, nth):
         return s[:find] + repl + s[find + len(sub) :]
     return s
 
-
-def find_nth(s, sub, n):
-    start = s.find(sub)
-    while start >= 0 and n > 1:
-        start = s.find(sub, start + len(sub))
-        n -= 1
-    return start
-
-
-def responseListToDict(responseList, splitChars="="):
-    responseDict = {}
-    if responseList != ["", ""]:
-        for element in responseList:
-            nameVal = element.split(splitChars)
-            responseDict[nameVal[0]] = nameVal[1]
-    return responseDict
-
-
 def mergeDicts(*dict_args):
     result = {}
     for dictionary in dict_args:
         result.update(dictionary)
     return result
-
 
 def comparedicts(d1, d2):
     d1Keys = set(d1.keys())

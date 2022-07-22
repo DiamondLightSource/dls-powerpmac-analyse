@@ -37,6 +37,13 @@ class DummyPpmac:
         self.coordSystemDefs = {
             "test": dls_ppmacanalyse.PowerPMAC().CoordSystemDefinition(csNumber=1)
         }
+        self.motionPrograms = {
+            "motionProgram": dls_ppmacanalyse.PowerPMAC().Program("", "", 3, "", "")
+        }
+        self.subPrograms = {}
+        self.plcPrograms = {}
+        self.forwardPrograms = {}
+        self.inversePrograms = {}
 
 
 class DummyProj:
@@ -66,13 +73,62 @@ class DummyPpmacArgs:
         self.name = None
 
 
-# class TestPpmacLexer(unittest.TestCase):
-#   def setUp(self):
-#      self.obj = dls_ppmacanalyse.PPMACLexer(None)
+class TestPpmacLexer(unittest.TestCase):
+    def test_scanNonAlphaNumeric(self):
+        charsInput = "dfkk ="
+        obj = dls_ppmacanalyse.PPMACLexer(charsInput)
+        lex_res = obj.scanNonAlphaNumeric("=", obj.chars)
+        assert lex_res == "="
+
+    def test_scanNumber(self):
+        charsInput = "dfjfj=-88"
+        obj = dls_ppmacanalyse.PPMACLexer(charsInput)
+        lex_res = obj.scanNumber("8", obj.chars)
+        assert lex_res == "8"
+        lex_res = obj.scanNumber("2", obj.chars)
+        assert lex_res == "2"
+
+    def test_scanSymbol(self):
+        charsInput = "callsub pv0"
+        obj = dls_ppmacanalyse.PPMACLexer(charsInput)
+        lex_res = obj.scanSymbol("callsub", obj.chars)
+        assert lex_res == "callsub"
+
+    def test_scanSymbol(self):
+        charsInput = "'dfdf'"
+        obj = dls_ppmacanalyse.PPMACLexer(charsInput)
+        lex_res = obj.scanSymbol("'", obj.chars)
+        assert lex_res == "'"
+
+    def test_scanHexadecimal(self):
+        charsInput = "$00000001"
+        obj = dls_ppmacanalyse.PPMACLexer(charsInput)
+        lex_res = obj.scanSymbol("$", obj.chars)
+        assert lex_res == "$"
+
+    @patch("dls_powerpmacanalyse.dls_ppmacanalyse.PPMACLexer.scanHexadecimal")
+    @patch("dls_powerpmacanalyse.dls_ppmacanalyse.PPMACLexer.scanString")
+    def test_lex(self, mock_string, mock_hex):
+        charsInput = "$00000001 'test' 2 ="
+        obj = dls_ppmacanalyse.PPMACLexer(charsInput)
+        obj.lex(obj.chars)
+        mock_hex.assert_called_with("$", obj.chars)
+        mock_string.assert_called_with("'", obj.chars)
+
 
 # def test_init(self):
 # def test_lex(self):
 # def test_scanSymbol(self):
+
+
+class TestPpmacParser(unittest.TestCase):
+    def test_parser(self):
+        with patch(
+            "sys.argv", ["dls-powerpmac-analyse", "-b", "all", "-i", "192.168.0.1:22"]
+        ):
+            ppmacArgs = dls_ppmacanalyse.parseArgs()
+            assert ppmacArgs.interface == ["192.168.0.1:22"]
+            assert ppmacArgs.backup == ["all"]
 
 
 class TestPpmacProject(unittest.TestCase):
@@ -137,11 +193,14 @@ class TestPpmacProjectCompare(unittest.TestCase):
 
 class TestPpmacCompare(unittest.TestCase):
     def setUp(self):
-        self.mockA = Mock()
-        self.mockB = Mock()
+        self.mockA = DummyPpmac()
+        self.mockB = DummyPpmac()
+        self.mockA.source = "DummyPmacA"
+        self.mockB.source = "DummyPmacB"
         self.obj = dls_ppmacanalyse.PPMACCompare(
             self.mockA, self.mockB, "./ppmacAnalyse"
         )
+        self.obj.compareDir = "/tmp"
 
     def test_init(self):
         assert self.obj.ppmacInstanceA == self.mockA
@@ -163,8 +222,83 @@ class TestPpmacCompare(unittest.TestCase):
         self.obj.setPPMACInstanceB(mock_proj)
         assert self.obj.ppmacInstanceB == mock_proj
 
-    # def test_compareActiveElements(self):
-    # def test_writeActiveElemDifferencesToFile(self):
+    def test_compareActiveElementsSame(self):
+        activeDir = self.obj.compareDir + "/active"
+        activeFilename = activeDir + "/ActiveElements_diff.html"
+        self.obj.compareActiveElements()
+        f = open(activeFilename, "r+")
+        assert "No Differences Found" in f.read()
+        f.close()
+        os.remove(activeFilename)
+        os.rmdir(activeDir)
+
+    def test_compareActiveElementsAOnly(self):
+        self.obj.ppmacInstanceA.activeElements[
+            "test2"
+        ] = dls_ppmacanalyse.PowerPMAC().ActiveElement("test", "testval")
+        activeDir = self.obj.compareDir + "/active"
+        activeFilenameHtml = activeDir + "/ActiveElements_diff.html"
+        activeFilename = activeDir + "/test.diff"
+        self.obj.compareActiveElements()
+        f = open(activeFilename, "r+")
+        assert (
+            f.read() == "@@ Active elements in source 'DummyPmacA' but not source"
+            " 'DummyPmacB' @@\n>>>> test = testval\n"
+        )
+        f.close()
+        os.remove(activeFilename)
+        os.remove(activeFilenameHtml)
+        os.rmdir(activeDir)
+
+    def test_compare_programs_same(self):
+        self.obj.comparePrograms()
+        assert self.obj.progNamesInAandB == {"motionProgram"}
+        assert len(self.obj.progNamesOnlyInA) == 0
+
+    def test_compare_programs_diff(self):
+        self.obj.ppmacInstanceA.subPrograms[
+            "subPrograms"
+        ] = dls_ppmacanalyse.PowerPMAC().Program("", "", 3, "", "")
+        activeDir = self.obj.compareDir + "/active/programs"
+        activeFilenameHtml = activeDir + "/MissingPrograms.html"
+        activeFilename = activeDir + "/missingPrograms.txt"
+        self.obj.comparePrograms()
+        assert self.obj.progNamesInAandB == {"motionProgram"}
+        assert len(self.obj.progNamesOnlyInA) == 1
+        f = open(activeFilename, "r+")
+        assert (
+            "@@ Programs in source 'DummyPmacA' but not source"
+            " 'DummyPmacB'\n>>>> subPrograms\n" in f.read()
+        )
+        f.close()
+        os.remove(activeFilename)
+        os.remove(activeFilenameHtml)
+        os.rmdir(activeDir)
+
+    def test_compareCoOrdSysDefsSame(self):
+        self.obj.compareCoordSystemAxesDefinitions()
+        assert self.obj.coordSystemsInAandB == {"test"}
+        assert len(self.obj.progNamesOnlyInA) == 0
+
+    def test_compareCoOrdSysDefsDiff(self):
+        self.obj.ppmacInstanceA.coordSystemDefs[
+            "test2"
+        ] = dls_ppmacanalyse.PowerPMAC().CoordSystemDefinition(csNumber=2)
+        activeDir = self.obj.compareDir + "/active/axes"
+        activeFilenameHtml = activeDir + "/MissingCoordSystems.html"
+        activeFilename = activeDir + "/missingCoordSystems.txt"
+        self.obj.compareCoordSystemAxesDefinitions()
+        assert len(self.obj.coordSystemsInAandB) == 1
+        assert len(self.obj.progNamesOnlyInA) == 0
+        f = open(activeFilename, "r+")
+        assert (
+            "@@ Coordinate Systems defined in source 'DummyPmacA'"
+            " but not source 'DummyPmacB'\n>>>> &test2" in f.read()
+        )
+        f.close()
+        os.remove(activeFilename)
+        os.remove(activeFilenameHtml)
+        os.rmdir(activeDir)
 
 
 class TestPpmacRepositoryWriteRead(unittest.TestCase):
@@ -353,6 +487,172 @@ class TestPpmacHardwareWriteRead(unittest.TestCase):
         mock_ignore.assert_called_with("test.this[0]", None)
         dls_ppmacanalyse.sshClient.sendCommand.assert_called_with("test.this[0]")
 
+    @patch(
+        "dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead."
+        "ignoreDataStructure"
+    )
+    @patch(
+        "dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead"
+        ".getDataStructureCategory"
+    )
+    def test_fillDataStructureIndices_ij_ignore_true(
+        self, mock_getcategory, mock_ignore
+    ):
+        data_structure = "test.this[]"
+        mock_getcategory.return_value = "test"
+        mock_ignore.return_value = True
+        self.obj.fillDataStructureIndices_ij(data_structure, None, None)
+        mock_getcategory.assert_called_with("test.this[]")
+        mock_ignore.assert_called_with("test.this[0:]", None)
+
+    @patch(
+        "dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead."
+        "ignoreDataStructure"
+    )
+    @patch(
+        "dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead."
+        "getDataStructureCategory"
+    )
+    def test_fillDataStructureIndices_ij_ignore_false_illegalcmd(
+        self, mock_getcategory, mock_ignore
+    ):
+        dls_ppmacanalyse.sshClient = Mock()
+        attrs = {"sendCommand.return_value": ("ILLEGAL\rNone", True)}
+        dls_ppmacanalyse.sshClient.configure_mock(**attrs)
+        data_structure = "test.this[]"
+        mock_getcategory.return_value = "test"
+        mock_ignore.return_value = False
+        self.obj.fillDataStructureIndices_ij(data_structure, None, None)
+        mock_getcategory.assert_called_with("test.this[]")
+        mock_ignore.assert_called_with("test.this[]", None)
+        dls_ppmacanalyse.sshClient.sendCommand.assert_called_with("test.this[2]")
+
+    @patch(
+        "dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead."
+        "ignoreDataStructure"
+    )
+    @patch(
+        "dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead"
+        ".getDataStructureCategory"
+    )
+    def test_fillDataStructureIndices_ijk_ignore_true(
+        self, mock_getcategory, mock_ignore
+    ):
+        data_structure = "test.this[]"
+        mock_getcategory.return_value = "test"
+        mock_ignore.return_value = True
+        self.obj.fillDataStructureIndices_ijk(data_structure, None, None)
+        mock_getcategory.assert_called_with("test.this[]")
+        mock_ignore.assert_called_with("test.this[0:]", None)
+
+    @patch(
+        "dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead."
+        "ignoreDataStructure"
+    )
+    @patch(
+        "dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead."
+        "getDataStructureCategory"
+    )
+    def test_fillDataStructureIndices_ijk_ignore_false_illegalcmd(
+        self, mock_getcategory, mock_ignore
+    ):
+        dls_ppmacanalyse.sshClient = Mock()
+        attrs = {"sendCommand.return_value": ("ILLEGAL\rNone", True)}
+        dls_ppmacanalyse.sshClient.configure_mock(**attrs)
+        data_structure = "test.this[]"
+        mock_getcategory.return_value = "test"
+        mock_ignore.return_value = False
+        self.obj.fillDataStructureIndices_ijk(data_structure, None, None)
+        mock_getcategory.assert_called_with("test.this[]")
+        mock_ignore.assert_called_with("test.this[]", None)
+        dls_ppmacanalyse.sshClient.sendCommand.assert_called_with("test.this[2]")
+
+    @patch(
+        "dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead."
+        "ignoreDataStructure"
+    )
+    @patch(
+        "dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead."
+        "getDataStructureCategory"
+    )
+    def test_fillDataStructureIndices_ij_ignore_false_illegalcmd(
+        self, mock_getcategory, mock_ignore
+    ):
+        dls_ppmacanalyse.sshClient = Mock()
+        attrs = {"sendCommand.return_value": ("ILLEGAL\rNone", True)}
+        dls_ppmacanalyse.sshClient.configure_mock(**attrs)
+        data_structure = "test.this[]"
+        mock_getcategory.return_value = "test"
+        mock_ignore.return_value = False
+        self.obj.fillDataStructureIndices_ij(data_structure, None, None)
+        mock_getcategory.assert_called_with("test.this[]")
+        mock_ignore.assert_called_with("test.this[]", None)
+        dls_ppmacanalyse.sshClient.sendCommand.assert_called_with("test.this[2]")
+
+    @patch(
+        "dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead."
+        "ignoreDataStructure"
+    )
+    @patch(
+        "dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead"
+        ".getDataStructureCategory"
+    )
+    def test_fillDataStructureIndices_ijkl_ignore_true(
+        self, mock_getcategory, mock_ignore
+    ):
+        data_structure = "test.this[]"
+        mock_getcategory.return_value = "test"
+        mock_ignore.return_value = True
+        self.obj.fillDataStructureIndices_ijkl(data_structure, None, None)
+        mock_getcategory.assert_called_with("test.this[]")
+        mock_ignore.assert_called_with("test.this[0:]", None)
+
+    @patch(
+        "dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead."
+        "ignoreDataStructure"
+    )
+    @patch(
+        "dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead."
+        "getDataStructureCategory"
+    )
+    def test_fillDataStructureIndices_ijkl_ignore_false_illegalcmd(
+        self, mock_getcategory, mock_ignore
+    ):
+        dls_ppmacanalyse.sshClient = Mock()
+        attrs = {"sendCommand.return_value": ("ILLEGAL\rNone", True)}
+        dls_ppmacanalyse.sshClient.configure_mock(**attrs)
+        data_structure = "test.this[]"
+        mock_getcategory.return_value = "test"
+        mock_ignore.return_value = False
+        self.obj.fillDataStructureIndices_ijkl(data_structure, None, None)
+        mock_getcategory.assert_called_with("test.this[]")
+        mock_ignore.assert_called_with("test.this[]", None)
+        dls_ppmacanalyse.sshClient.sendCommand.assert_called_with("test.this[2]")
+
+    @patch("dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead.sendCommand")
+    @patch("dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead.sendCommand")
+    def test_getCoordSystemMotorDefinitions(self, mock_send_coord, mock_send_axes):
+        mock_send_coord.return_value = ["1"]
+        mock_send_axes.return_value = [
+            "&0#0->0",
+            "&1#1->i",
+            "#2->i",
+            "#3->i",
+            "#4->i",
+            "#5->i",
+            "#6->i",
+            "&0#7->0",
+            "#8->0",
+        ]
+        coordSystemMotorDefinitions = self.obj.getCoordSystemMotorDefinitions()
+        assert coordSystemMotorDefinitions == {
+            "0": ["0", ["&0#0->0", "&0#7->0", "&0#8->0"]],
+            "1": [
+                "1",
+                ["&1#1->i", "&1#2->i", "&1#3->i", "&1#4->i", "&1#5->i", "&1#6->i"],
+            ],
+        }
+
     # def test_fillDataStructureIndices_ij(self):
     # def test_fillDataStructureIndices_ijk(self):
     # def test_fillDataStructureIndices_ijkl(self):
@@ -378,6 +678,23 @@ class TestPowerPMAC(unittest.TestCase):
         assert self.obj.forwardPrograms == {}
         assert self.obj.inversePrograms == {}
         assert self.obj.coordSystemDefs == {}
+
+
+class Stdout:
+    def __init__(self, cmdin):
+        self.channel = Channel()
+        self.cmd = cmdin
+
+    def read(self):
+        return self.cmd
+
+
+class Channel:
+    def __init__(self):
+        self.exit_status = 0
+
+    def recv_exit_status(self):
+        return self.exit_status
 
 
 class TestPPMACanalyse(unittest.TestCase):
@@ -415,6 +732,65 @@ class TestPPMACanalyse(unittest.TestCase):
         self.ppmacArgs.backup = ["all"]
         mock_exists.return_value = True
         self.obj.processBackupOptions(self.ppmacArgs)
+
+    @patch("dls_powerpmacanalyse.dls_ppmacanalyse.sshClient.connect")
+    def test_checkConnection(self, mock_connect):
+        mock_connect.return_value = None
+        self.obj.checkConnection(False)
+
+    def test_isValidNetworkInterface(self):
+        interface = "192.168.56.10:22"
+        isValid = dls_ppmacanalyse.isValidNetworkInterface(interface)
+        assert isValid is True
+        interface = "192.168.56.10:a"
+        isValid = dls_ppmacanalyse.isValidNetworkInterface(interface)
+        assert isValid is False
+        interface = "192.168.b.10:22"
+        isValid = dls_ppmacanalyse.isValidNetworkInterface(interface)
+        assert isValid is False
+
+    @patch("dls_powerpmacanalyse.dls_ppmacanalyse.PPMACCompare.compareActiveElements")
+    @patch("dls_powerpmacanalyse.dls_ppmacanalyse.PPMACCompare.comparePrograms")
+    @patch(
+        "dls_powerpmacanalyse.dls_ppmacanalyse.PPMACCompare."
+        "compareCoordSystemAxesDefinitions"
+    )
+    @patch("dls_powerpmacanalyse.dls_ppmacanalyse.PPMACRepositoryWriteRead")
+    @patch("dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead")
+    @patch("dls_powerpmacanalyse.dls_ppmacanalyse.PPMACanalyse.checkConnection")
+    def test_compare(
+        self,
+        mock_connect,
+        mock_readwrite,
+        mock_repoWriteRead,
+        mock_compare1,
+        mock_compare2,
+        mock_compare3,
+    ):
+        mock_connect.return_value = True
+        self.obj.compareDir = ""
+        self.obj.ignoreFile = "/ignore"
+        self.obj.compareSourceA = "192.168.10.2:22"
+        self.obj.compareSourceB = "/test"
+        self.obj.compare()
+        mock_readwrite.assert_called_once()
+        mock_repoWriteRead.assert_called_once()
+        mock_compare1.assert_called_once()
+        mock_compare2.assert_called_once()
+        mock_compare3.assert_called_once()
+
+    @patch("dls_powerpmacanalyse.dls_ppmacanalyse.sshClient.client.exec_command")
+    def test_executeRemoteShellCommand(self, mock_exec):
+        mock_exec.return_value = "", Stdout("test cmd"), ""
+        dls_ppmacanalyse.executeRemoteShellCommand("cmd")
+
+    def test_nthRepl(self):
+        s = "ReplaceNinallplacesNtestN"
+        sub = "N"
+        repl = "X"
+        nth = 2
+        res = dls_ppmacanalyse.nthRepl(s, sub, repl, nth)
+        assert res == "ReplaceNinallplacesXtestN"
 
     # @patch("dls_powerpmacanalyse.dls_ppmacanalyse.PPMACanalyse.checkConnection")
     # def test_backup(self, mock_connection):
