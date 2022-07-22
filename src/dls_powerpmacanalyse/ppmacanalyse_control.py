@@ -294,9 +294,9 @@ class Controlform(QtWidgets.QMainWindow, Ui_ControlForm):
         filename, _filter = QFileDialog.getOpenFileName()
         if filename != "":
             if self.mode == 0:
-                self.lineIgnoreFile.setText(filename)
+                self.lineIgnoreFile0.setText(filename)
             elif self.mode == 1:
-                self.lineIgnoreFile2.setText(filename)
+                self.lineIgnoreFile1.setText(filename)
 
     def outputDirBrowser(self):
         directory = QFileDialog.getExistingDirectory()
