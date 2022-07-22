@@ -94,7 +94,7 @@ class TestPpmacLexer(unittest.TestCase):
         lex_res = obj.scanSymbol("callsub", obj.chars)
         assert lex_res == "callsub"
 
-    def test_scanSymbol(self):
+    def test_scanSymbolQuote(self):
         charsInput = "'dfdf'"
         obj = dls_ppmacanalyse.PPMACLexer(charsInput)
         lex_res = obj.scanSymbol("'", obj.chars)
@@ -563,28 +563,6 @@ class TestPpmacHardwareWriteRead(unittest.TestCase):
         mock_getcategory.return_value = "test"
         mock_ignore.return_value = False
         self.obj.fillDataStructureIndices_ijk(data_structure, None, None)
-        mock_getcategory.assert_called_with("test.this[]")
-        mock_ignore.assert_called_with("test.this[]", None)
-        dls_ppmacanalyse.sshClient.sendCommand.assert_called_with("test.this[2]")
-
-    @patch(
-        "dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead."
-        "ignoreDataStructure"
-    )
-    @patch(
-        "dls_powerpmacanalyse.dls_ppmacanalyse.PPMACHardwareWriteRead."
-        "getDataStructureCategory"
-    )
-    def test_fillDataStructureIndices_ij_ignore_false_illegalcmd(
-        self, mock_getcategory, mock_ignore
-    ):
-        dls_ppmacanalyse.sshClient = Mock()
-        attrs = {"sendCommand.return_value": ("ILLEGAL\rNone", True)}
-        dls_ppmacanalyse.sshClient.configure_mock(**attrs)
-        data_structure = "test.this[]"
-        mock_getcategory.return_value = "test"
-        mock_ignore.return_value = False
-        self.obj.fillDataStructureIndices_ij(data_structure, None, None)
         mock_getcategory.assert_called_with("test.this[]")
         mock_ignore.assert_called_with("test.this[]", None)
         dls_ppmacanalyse.sshClient.sendCommand.assert_called_with("test.this[2]")
