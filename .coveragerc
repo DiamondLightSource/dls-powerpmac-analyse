@@ -1,0 +1,7 @@
+[run]
+source = src/
+omit = 
+	*/_version_git.py
+	*/tests/*
+        *__init__.py
+        *__main__.py
