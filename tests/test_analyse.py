@@ -341,6 +341,10 @@ class TestPpmacRepositoryWriteRead(unittest.TestCase):
         assert mock_write.called
         assert mock_write_active.called
         assert mock_write_all.called
+        os.remove("./ppmacAnalyse/active/axes/cstestAxes")
+        os.rmdir("./ppmacAnalyse/active/axes")
+        os.rmdir("./ppmacAnalyse/active")
+        os.rmdir("./ppmacAnalyse")
 
     def test_writeDataStructures(self):
         test_file = "/tmp/active/dataStructures.txt"
@@ -631,16 +635,6 @@ class TestPpmacHardwareWriteRead(unittest.TestCase):
             ],
         }
 
-    # def test_fillDataStructureIndices_ij(self):
-    # def test_fillDataStructureIndices_ijk(self):
-    # def test_fillDataStructureIndices_ijkl(self):
-    # def test_createDataStructuresFromSymbolsTables(self):
-    # def test_getActiveElementsFromDataStructures(self):
-    # def test_expandSplicedIndices(self):
-    # def test_readAndStoreActiveState(self):
-    # def test_getBufferedProgramsInfo(self):
-    # def test_test_getActiveElementsFromDataStructures
-
 
 class TestPowerPMAC(unittest.TestCase):
     def setUp(self):
@@ -770,13 +764,5 @@ class TestPPMACanalyse(unittest.TestCase):
         res = dls_ppmacanalyse.nthRepl(s, sub, repl, nth)
         assert res == "ReplaceNinallplacesXtestN"
 
-    # @patch("dls_powerpmacanalyse.dls_ppmacanalyse.PPMACanalyse.checkConnection")
-    # def test_backup(self, mock_connection):
-    #     mock_connection.return_value = True
-    #     self.obj.name = "Test"
-    #     test_file = "/tmp/test.txt"
-    #     self.obj.ignoreFile = test_file
-    #     with open(test_file, mode="w") as f:
-    #         f.write("Coord[8:]")
-    #     self.obj.backup()
-    #     os.remove(test_file)
+    def tearDown(self):
+        os.rmdir("./ppmacAnalyse")

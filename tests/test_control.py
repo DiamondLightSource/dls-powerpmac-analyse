@@ -102,10 +102,16 @@ class ControlTest(unittest.TestCase):
         assert self.obj.lineOutputDir2.text() == dir
 
     @patch("dls_powerpmacanalyse.htmlDisp.ComparisonViewer.show")
-    def testOpenViewer(self, mock_show):
+    def testOpenViewerNoFiles(self, mock_show):
         self.obj.openViewer()
         assert self.obj.lineOutputDir1.text() == "./ppmacAnalyse"
         assert self.obj.compviewer.ui.numFiles == 0
+
+    @patch("dls_powerpmacanalyse.htmlDisp.ComparisonViewer.show")
+    def testOpenViewerFiles(self, mock_show):
+        self.obj.compviewer.setup("./ppmacAnalyse", ["testfilelist.html"])
+        assert self.obj.compviewer.ui.numFiles == 1
+        assert self.obj.compviewer.ui.filelist == ["testfilelist.html"]
 
     def tearDown(self):
         self.obj.close()
