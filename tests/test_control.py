@@ -105,10 +105,7 @@ class ControlTest(unittest.TestCase):
     def testOpenViewer(self, mock_show):
         self.obj.openViewer()
         assert self.obj.lineOutputDir1.text() == "./ppmacAnalyse"
-        assert self.obj.compviewer.ui.numFiles == 1
-        assert self.obj.compviewer.ui.filelist == [
-            "ppmacAnalyse/active/ActiveElements_diff.html"
-        ]
+        assert self.obj.compviewer.ui.numFiles == 0
 
     def tearDown(self):
         self.obj.close()
