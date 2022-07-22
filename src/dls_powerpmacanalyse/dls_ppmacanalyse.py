@@ -217,11 +217,13 @@ def nthRepl(s, sub, repl, nth):
         return s[:find] + repl + s[find + len(sub) :]
     return s
 
+
 def mergeDicts(*dict_args):
     result = {}
     for dictionary in dict_args:
         result.update(dictionary)
     return result
+
 
 def comparedicts(d1, d2):
     d1Keys = set(d1.keys())
